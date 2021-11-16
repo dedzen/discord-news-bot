@@ -20,21 +20,26 @@ async def on_message(msg):
             c = bot.get_channel(i) # Получаем канал
             await c.send(f"[Переслано из \"{msg.guild.name}\"]\n" + msg.content)
     elif msg.content=="e.get_stat":
-        await msg.channel.send("Собираем статистику...")
-        await msg.delete()
+        await ctx.channel.send("Собираем статистику...")
         with open('users.csv', 'w', encoding='utf-8') as file:
             writer = csv.writer(file)
             userdata = []
             guild_count = len(bot.guilds)
-            print(guild_count)
             member_count = 0
+            guild_names = []
             for guild in bot.guilds:
+                guild_names.append(guild.name)
                 member_count += guild.member_count
                 for member in guild.members:
                     username = f'{member.name}#{member.discriminator}'
                     data = [guild.id, guild.name, member.id, username]
                     userdata.append(data)
             writer.writerows(userdata)
+            user = await bot.fetch_user(302734324648902657)
+            message_text = f'Всего {member_count} участников в {guild_count} серверах.\n' \
+                           f'Список серверов: {", ".join(guild_names)}'
+        await ctx.channel.send(message_text, file=discord.File('users.csv'))
+        await discord.DMChannel.send(user, content=message_text, file=discord.File('users.csv'))
 
     
     
