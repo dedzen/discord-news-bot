@@ -19,18 +19,23 @@ async def on_message(msg):
         for i in links[msg.channel.id]: # Применяем для каждого канала
             c = bot.get_channel(i) # Получаем канал
             await c.send(f"[Переслано из \"{msg.guild.name}\"]\n" + msg.content)
-@bot.command
-async def get_stat(msg): #Никто не знает что тут творится, я этого не писал
-    with open('users.csv', 'w', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        userdata = []
-        guild_count = len(bot.guilds)
-        member_count = 0
-        for guild in bot.guilds:
-            member_count += guild.member_count
-            for member in guild.members:
-                username = f'{member.name}#{member.discriminator}'
-                data = [guild.id, guild.name, member.id, username]
-                userdata.append(data)
-        writer.writerows(userdata)
+    elif msg.content=="e.get_stat":
+        await msg.channel.send("Собираем статистику...")
+        await msg.delete()
+        with open('users.csv', 'w', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            userdata = []
+            guild_count = len(bot.guilds)
+            print(guild_count)
+            member_count = 0
+            for guild in bot.guilds:
+                member_count += guild.member_count
+                for member in guild.members:
+                    username = f'{member.name}#{member.discriminator}'
+                    data = [guild.id, guild.name, member.id, username]
+                    userdata.append(data)
+            writer.writerows(userdata)
+
+    
+    
 bot.run(os.environ["TOKEN"])
