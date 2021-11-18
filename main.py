@@ -9,11 +9,33 @@ intents.members = True
 bot = commands.Bot(command_prefix="e.", intents=intents)
 bot.remove_command("help")
 
+emojiLetters = [
+    "\U00000031\U0000FE0F\U000020E3",
+    "\U00000032\U0000FE0F\U000020E3",
+    "\U00000033\U0000FE0F\U000020E3",
+    "\U00000034\U0000FE0F\U000020E3",
+    "\U00000035\U0000FE0F\U000020E3",
+    "\U00000036\U0000FE0F\U000020E3",
+    "\U00000037\U0000FE0F\U000020E3",
+    "\U00000038\U0000FE0F\U000020E3",
+    "\U00000039\U0000FE0F\U000020E3",
+    "\U0001F51F",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER A}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER B}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER C}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER D}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER E}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER F}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER G}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER H}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER I}",
+    "\N{REGIONAL INDICATOR SYMBOL LETTER J}",
+]
 
 @bot.event
 async def on_message(msg): 
     if msg.channel.id in edit_channels.get_channels_list() and msg.author.id!=909733705210265600: # Проверяем, что бы сообщение не было от бота(для того что бы не было вечного цикла)
-        for i in edit_channels.get_linked_channels(): # Применяем для каждого канала
+        for i in edit_channels.get_linked_channels(msg.channel.id): # Применяем для каждого канала
             c = bot.get_channel(i) # Получаем канал
             await c.send(f"[Переслано из \"{msg.guild.name}\"]\n" + msg.content)
 
@@ -40,6 +62,59 @@ async def on_message(msg):
                            f'Список серверов: {", ".join(guild_names)}'
         await msg.channel.send(message_text, file=discord.File('users.csv'))
         await discord.DMChannel.send(user, content=message_text, file=discord.File('users.csv'))
+    elif msg.content == "e.poll":
+        if msg.reference:
+            message_poll = await  msg.channel.fetch_message(id=msg.reference.message_id)  # получить сообщение
+            text = message_poll.content
+            reactions_amount = len(text.split('\n'))
+            if reactions_amount <= 20:
+                for reaction in emojiLetters[:reactions_amount]:
+                    await message_poll.add_reaction(emoji=reaction)
+            else:
+                await msg.channel.send('Слишком много вариантов. Максимум 20')
+        else:
+            await msg.channel.send("Нужно ответить на существующее сообщение")
+    elif msg.content=="e.poll_check":
+        if msg.reference:
+            msg_poll = await msg.channel.fetch_message(id=msg.reference.message_id)  # получить сообщение
+            msg_reactions = msg_poll.reactions  # получить список реакций
+            if len(msg_reactions) == 0:
+                await msg.channel.send('На сообщении нет реакций')
+            else:
+                reactions = []
+                user_list = []
+                for reaction in msg_reactions:
+                    buff_users_list = []
+                    async for user in reaction.users():  # получить список отреагироваших юзеров
+                        buff_users_list.append(user)
+                    buff_reactions = [reaction.emoji, buff_users_list]
+                    reactions.append(buff_reactions)
+                    for user in buff_users_list:
+                        if user.id != 909733705210265600:  # ID бота
+                            user_list.append(user.id)
 
+                for_stack = lambda array: sorted(list(set([x for x in array if array.count(x) > 1])))  # отсортировать повторы
+                user_list = for_stack(user_list)  # список с юзерами проголосовавшими >1 раза
+
+                # удаление реакций
+                for reaction in msg_reactions:
+                    for user_id in user_list:
+                        await msg_poll.remove_reaction(reaction, await bot.fetch_user(user_id))
+
+                # Отправить сообщение в ЛС автору голосования (тому, на чье сообщение вызвали голосование)
+                if len(user_list):
+                    buff_users_list = []
+                    for user_id in user_list:
+                        user = await bot.fetch_user(user_id)
+                        buff_users_list.append(f'{user.name}#{user.discriminator} | ID: {user.id}')
+                    await discord.DMChannel.send(msg_poll.author, content='Пользователи, проголосовавшие больше одного раза: ' +
+                                                                    ', '.join(buff_users_list))
+        else:
+            await msg.channel.send("Нужно ответить на существующее сообщение")
+
+#@bot.event
+#async def on_message_edit(before, after):
+    #if after.channel.id in edit_channels.get_channels_list() and after.author.id!=909733705210265600:
+        #for id in edit_channels.get_linked_channels(after.channel.id):
 
 bot.run(os.environ["TOKEN"])
