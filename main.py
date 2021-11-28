@@ -1,5 +1,5 @@
 import discord
-from discord import commands
+from discord.ext import commands
 from discord.utils import get
 import os
 import csv
@@ -35,9 +35,10 @@ emojiLetters = [
 
 @bot.event
 async def on_message(msg): 
-    if msg.channel.id in (edit_channels.get_channels_list()[0] + edit_channels.get_channels_list()[0])  and msg.author.id!=909733705210265600: # Проверяем, что бы сообщение не было от бота(для того что бы не было вечного цикла)
+    if msg.channel.id in (edit_channels.get_channels_list()[0] + edit_channels.get_channels_list()[1])  and msg.author.id!=909733705210265600: # Проверяем, что бы сообщение не было от бота(для того что бы не было вечного цикла)
         for i in edit_channels.get_linked_channels(msg.channel.id): # Применяем для каждого канала
             c = bot.get_channel(i) # Получаем канал
+            print(c.guild)
             await c.send(f"[Переслано из \"{msg.guild.name}\"]\n" + msg.content)
 
     elif msg.content=="e.get_stat" and (msg.author.id==548820288616398858 or msg.author.id==302734324648902657):
