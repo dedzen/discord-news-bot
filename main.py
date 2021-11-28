@@ -1,5 +1,6 @@
 import discord
-from discord.ext import commands
+from discord import commands
+from discord.utils import get
 import os
 import csv
 import edit_channels
@@ -34,7 +35,7 @@ emojiLetters = [
 
 @bot.event
 async def on_message(msg): 
-    if msg.channel.id in edit_channels.get_channels_list() and msg.author.id!=909733705210265600: # Проверяем, что бы сообщение не было от бота(для того что бы не было вечного цикла)
+    if msg.channel.id in (edit_channels.get_channels_list()[0] + edit_channels.get_channels_list()[0])  and msg.author.id!=909733705210265600: # Проверяем, что бы сообщение не было от бота(для того что бы не было вечного цикла)
         for i in edit_channels.get_linked_channels(msg.channel.id): # Применяем для каждого канала
             c = bot.get_channel(i) # Получаем канал
             await c.send(f"[Переслано из \"{msg.guild.name}\"]\n" + msg.content)
@@ -112,9 +113,7 @@ async def on_message(msg):
         else:
             await msg.channel.send("Нужно ответить на существующее сообщение")
 
-#@bot.event
-#async def on_message_edit(before, after):
-    #if after.channel.id in edit_channels.get_channels_list() and after.author.id!=909733705210265600:
-        #for id in edit_channels.get_linked_channels(after.channel.id):
+
+
 
 bot.run(os.environ["TOKEN"])
