@@ -90,6 +90,7 @@ async def get_stat(ctx:commands.Context, verbose="F"):
 @bot.event
 async def on_message(msg: discord.Message): 
     if msg.channel.id in edit_channels.get_channels_list()[2] and  msg.author.id!=909733705210265600:
+        print("New message in chat!")
         embed = discord.Embed(title=msg.content)
         avatar_url = msg.author.avatar_url
         embed.set_author(name=msg.author.name, icon_url=avatar_url)
