@@ -1,13 +1,16 @@
 import discord
-from discord import channel
 from discord.ext import commands
 from discord.utils import get
+
 import os
 import csv
+
 import edit_channels
+import webhook_utils
 
 intents = discord.Intents.default()
 intents.members = True
+intents.messages = True
 bot = commands.Bot(command_prefix="e.", intents=intents)
 
 emojiLetters = [
@@ -37,11 +40,13 @@ emojiLetters = [
 async def post(ctx: commands.Context, *, arg:str):
     if ctx.message.channel.id in (edit_channels.get_channels_list()[0] + edit_channels.get_channels_list()[1])  and ctx.message.author.id!=909733705210265600: # Проверяем, что бы сообщение не было от бота(для того что бы не было вечного цикла)
         for i in edit_channels.get_linked_channels(ctx.message.channel.id): # Применяем для каждого канала
-            c = bot.get_channel(i) # Получаем канал
-            print(c.guild)
-            await c.send(f"[Переслано из \"{ctx.message.guild.name}\"]\n" + arg)
-    ctx.channel.send(arg)
-    ctx.message.delete()
+            try:
+                c = bot.get_channel(i) # Получаем канал
+                await c.send(f"[Переслано из \"{ctx.message.guild.name}\"]\n" + arg)
+            except Exception as e:
+                webhook_utils.log_error(ctx.guild, e, 2)
+    await ctx.channel.send(arg)
+    await ctx.message.delete()
     
 @bot.command()
 async def get_stat(ctx:commands.Context, verbose="F"):
@@ -87,22 +92,31 @@ async def get_stat(ctx:commands.Context, verbose="F"):
         await discord.DMChannel.send(user, content=message_text, file=discord.File('users.csv'))
 
 
+
 @bot.event
 async def on_message(msg: discord.Message): 
-    if msg.channel.id in edit_channels.get_channels_list()[2] and  msg.author.id!=909733705210265600:
-        print("New message in chat!")
-        embed = discord.Embed(title=msg.content)
-        avatar_url = msg.author.avatar_url
-        embed.set_author(name=msg.author.name, icon_url=avatar_url)
-        embed.set_footer(text=f"{msg.id} | {msg.guild.name}")
-        embed.set_thumbnail(url="https://jsoncompare.org/LearningContainer/SampleFiles/Video/MP4/Sample-MP4-Video-File-for-Testing.mp4")
-        if msg.attachments != []:
-            embed.set_image(url=msg.attachments[0].url)
+    if msg.channel.id in edit_channels.get_channels_list()[2] and not msg.webhook_id:
         for id in edit_channels.get_linked_channels(msg.channel.id):
-            channel = await bot.fetch_channel(id)
-            await channel.send(embed=embed)
-
+            try:
+                whook_url = await webhook_utils.create_webhook_if_not_exist(bot, id)
+                webhook_utils.send_with_webhook(whook_url, msg.content, msg.guild.name, msg.author.name,  msg.author.avatar_url, msg.attachments)
+            except Exception as e:
+                webhook_utils.log_error(msg.channel.guild, e, type=1)
     await bot.process_commands(msg)
+
+@bot.event
+async def on_message_delete(msg: discord.Message):
+    if msg.channel.id in edit_channels.get_channels_list()[2]:
+        print("deleted")
+        print(msg.content)
+        await delete_msg(msg.content, msg.channel.id)
+
+async def delete_msg(content, channel_id):
+    for id in edit_channels.get_linked_channels(channel_id):
+        channel = await bot.fetch_channel(id)
+        for msg in await channel.history(limit=10).flatten():
+            if msg.content == content:
+                await msg.delete()
 
 
 
