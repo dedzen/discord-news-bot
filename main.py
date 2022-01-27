@@ -96,12 +96,13 @@ async def get_stat(ctx:commands.Context, verbose="F"):
 @bot.event
 async def on_message(msg: discord.Message): 
     if msg.channel.id in edit_channels.get_channels_list()[2] and not msg.webhook_id:
-        for id in edit_channels.get_linked_channels(msg.channel.id):
-            try:
-                whook_url = await webhook_utils.create_webhook_if_not_exist(bot, id)
-                webhook_utils.send_with_webhook(whook_url, msg.content, msg.guild.name, msg.author.name,  msg.author.avatar_url, msg.attachments)
-            except Exception as e:
-                webhook_utils.log_error(msg.channel.guild, e, type=1)
+        if not "everyone" in msg.content:
+            for id in edit_channels.get_linked_channels(msg.channel.id):
+                try:
+                    whook_url = await webhook_utils.create_webhook_if_not_exist(bot, id)
+                    webhook_utils.send_with_webhook(whook_url, msg.content, msg.guild.name, msg.author.name,  msg.author.avatar_url, msg.attachments)
+                except Exception as e:
+                    webhook_utils.log_error(msg.channel.guild, e, type=1)
     await bot.process_commands(msg)
 
 @bot.event
