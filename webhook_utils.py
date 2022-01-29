@@ -8,15 +8,14 @@ async def create_webhook_if_not_exist(client, id: int) -> str:
     channel = await client.fetch_channel(id)
     try:
         webhooks = await channel.webhooks()
-        if not webhooks:
-            whook = await channel.create_webhook(name="interserver chat")
-            return whook.url
-        else:
+        if webhooks:
             return webhooks[0].url
+        whook = await channel.create_webhook(name="interserver chat")
+        return whook.url
     except Exception as e:
         log_error(channel.guild, e, 1)
 def send_with_webhook(url, content, server, name,  avatar_url, attachaments):
-     allowed_mentions = {
+    allowed_mentions = {
         "parse": []
     }
     webhook = DiscordWebhook(url=url, content=content, username=f"{name} | {server}", avatar_url=f"{avatar_url}", allowed_mentions=allowed_mentions)
