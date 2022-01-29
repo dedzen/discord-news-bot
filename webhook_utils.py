@@ -1,29 +1,9 @@
-from discord.ext.commands import context
-from discord_webhook import DiscordWebhook, DiscordEmbed
+from discord_webhook import DiscordWebhook
 import discord 
 import traceback as tb
 
 
-async def create_webhook_if_not_exist(client, id: int) -> str: 
-    channel = await client.fetch_channel(id)
-    try:
-        webhooks = await channel.webhooks()
-        if webhooks:
-            return webhooks[0].url
-        whook = await channel.create_webhook(name="interserver chat")
-        return whook.url
-    except Exception as e:
-        log_error(channel.guild, e, 1)
-def send_with_webhook(url, content, server, name,  avatar_url, attachaments):
-    allowed_mentions = {
-        "parse": []
-    }
-    webhook = DiscordWebhook(url=url, content=content, username=f"{name} | {server}", avatar_url=f"{avatar_url}", allowed_mentions=allowed_mentions)
-    if attachaments:
-        embed = DiscordEmbed()
-        embed.set_image(url=attachaments[0].url)
-        webhook.add_embed(embed=embed)
-    webhook.execute()
+
 
 def log_error(guild :discord.Guild, e: Exception, type=-1):
     if type==0:

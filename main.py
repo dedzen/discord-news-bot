@@ -1,7 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.utils import get
-
 import os
 import csv
 
@@ -90,35 +88,6 @@ async def get_stat(ctx:commands.Context, verbose="F"):
                                     f'Сервера с каналом объявлений: {", ".join(server_names_announcments)}'
         await ctx.message.channel.send(message_text, file=discord.File('users.csv'))
         await discord.DMChannel.send(user, content=message_text, file=discord.File('users.csv'))
-
-
-
-@bot.event
-async def on_message(msg: discord.Message): 
-    if msg.channel.id in edit_channels.get_channels_list()[2] and not msg.webhook_id:
-        if not "everyone" in msg.content:
-            for id in edit_channels.get_linked_channels(msg.channel.id):
-                try:
-                    whook_url = await webhook_utils.create_webhook_if_not_exist(bot, id)
-                    webhook_utils.send_with_webhook(whook_url, msg.content, msg.guild.name, msg.author.name,  msg.author.avatar_url, msg.attachments)
-                except Exception as e:
-                    webhook_utils.log_error(msg.channel.guild, e, type=1)
-    await bot.process_commands(msg)
-
-@bot.event
-async def on_message_delete(msg: discord.Message):
-    if msg.channel.id in edit_channels.get_channels_list()[2]:
-        print("deleted")
-        print(msg.content)
-        await delete_msg(msg.content, msg.channel.id)
-
-async def delete_msg(content, channel_id):
-    for id in edit_channels.get_linked_channels(channel_id):
-        channel = await bot.fetch_channel(id)
-        for msg in await channel.history(limit=10).flatten():
-            if msg.content == content:
-                await msg.delete()
-
 
 
 bot.run(os.environ["TOKEN"])
